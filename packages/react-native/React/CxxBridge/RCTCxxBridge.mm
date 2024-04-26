@@ -29,7 +29,6 @@
 #import <React/RCTPerformanceLogger.h>
 #import <React/RCTProfile.h>
 #import <React/RCTRedBox.h>
-#import <React/RCTRedBoxSetEnabled.h>
 #import <React/RCTReloadCommand.h>
 #import <React/RCTTurboModuleRegistry.h>
 #import <React/RCTUtils.h>
@@ -107,7 +106,7 @@ class GetDescAdapter : public JSExecutorFactory {
   std::shared_ptr<JSExecutorFactory> factory_;
 };
 
-} // namespace
+}
 
 static void mapReactMarkerToPerformanceLogger(
     const ReactMarker::ReactMarkerId markerId,
@@ -439,7 +438,7 @@ struct RCTInstanceCallback : public InstanceCallback {
   // pointer into a member of RCTBridge! But we only use it while _reactInstance exists, meaning we
   // haven't been invalidated, and therefore RCTBridge hasn't been deallocated yet.
   RCTAssertMainQueue();
-  facebook::react::jsinspector_modern::HostTarget *parentInspectorTarget = _parentBridge.inspectorTarget;
+  facebook::react::jsinspector_modern::PageTarget *parentInspectorTarget = _parentBridge.inspectorTarget;
 
   // Dispatch the instance initialization as soon as the initial module metadata has
   // been collected (see initModules)
@@ -660,7 +659,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 }
 
 - (void)_initializeBridge:(std::shared_ptr<JSExecutorFactory>)executorFactory
-    parentInspectorTarget:(facebook::react::jsinspector_modern::HostTarget *)parentInspectorTarget
+    parentInspectorTarget:(facebook::react::jsinspector_modern::PageTarget *)parentInspectorTarget
 {
   if (!self.valid) {
     return;
@@ -693,7 +692,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 }
 
 - (void)_initializeBridgeLocked:(std::shared_ptr<JSExecutorFactory>)executorFactory
-          parentInspectorTarget:(facebook::react::jsinspector_modern::HostTarget *)parentInspectorTarget
+          parentInspectorTarget:(facebook::react::jsinspector_modern::PageTarget *)parentInspectorTarget
 {
   std::lock_guard<std::mutex> guard(_moduleRegistryLock);
 
@@ -1086,8 +1085,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 
   if (self->_valid && !self->_loading) {
     if ([error userInfo][RCTJSRawStackTraceKey]) {
-      RCTRedBox *redBox = RCTRedBoxGetEnabled() ? [self.moduleRegistry moduleForName:"RedBox"] : nil;
-      [redBox showErrorMessage:[error localizedDescription] withRawStack:[error userInfo][RCTJSRawStackTraceKey]];
+      [self.redBox showErrorMessage:[error localizedDescription] withRawStack:[error userInfo][RCTJSRawStackTraceKey]];
     }
 
     RCTFatal(error);
@@ -1102,7 +1100,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 
   // Hack: once the bridge is invalidated below, it won't initialize any new native
   // modules. Initialize the redbox module now so we can still report this error.
-  RCTRedBox *redBox = RCTRedBoxGetEnabled() ? [self.moduleRegistry moduleForName:"RedBox"] : nil;
+  RCTRedBox *redBox = [self redBox];
 
   _loading = NO;
   _valid = NO;
@@ -1569,7 +1567,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithBundleURL
   return _reactInstance->getJavaScriptContext();
 }
 
-- (void)invokeAsync:(CallFunc &&)func
+- (void)invokeAsync:(std::function<void()> &&)func
 {
   __block auto retainedFunc = std::move(func);
   __weak __typeof(self) weakSelf = self;

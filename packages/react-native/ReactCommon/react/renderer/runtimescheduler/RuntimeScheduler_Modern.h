@@ -8,7 +8,6 @@
 #pragma once
 
 #include <ReactCommon/RuntimeExecutor.h>
-#include <react/renderer/consistency/ShadowTreeRevisionConsistencyManager.h>
 #include <react/renderer/runtimescheduler/RuntimeScheduler.h>
 #include <react/renderer/runtimescheduler/RuntimeSchedulerClock.h>
 #include <react/renderer/runtimescheduler/Task.h>
@@ -23,7 +22,8 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
  public:
   explicit RuntimeScheduler_Modern(
       RuntimeExecutor runtimeExecutor,
-      std::function<RuntimeSchedulerTimePoint()> now);
+      std::function<RuntimeSchedulerTimePoint()> now =
+          RuntimeSchedulerClock::now);
 
   /*
    * Not copyable.
@@ -87,6 +87,14 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
   bool getShouldYield() const noexcept override;
 
   /*
+   * Return value informs if the current task is executed inside synchronous
+   * block.
+   *
+   * Can be called from any thread.
+   */
+  bool getIsSynchronous() const noexcept override;
+
+  /*
    * Returns value of currently executed task. Designed to be called from React.
    *
    * Thread synchronization must be enforced externally.
@@ -122,10 +130,6 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
   void scheduleRenderingUpdate(
       RuntimeSchedulerRenderingUpdate&& renderingUpdate) override;
 
-  void setShadowTreeRevisionConsistencyManager(
-      ShadowTreeRevisionConsistencyManager*
-          shadowTreeRevisionConsistencyManager) override;
-
  private:
   std::atomic<uint_fast8_t> syncTaskRequests_{0};
 
@@ -135,7 +139,7 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
       TaskPriorityComparer>
       taskQueue_;
 
-  Task* currentTask_{};
+  std::shared_ptr<Task> currentTask_;
 
   /**
    * This protects the access to `taskQueue_` and `isWorkLoopScheduled_`.
@@ -144,6 +148,8 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
 
   const RuntimeExecutor runtimeExecutor_;
   SchedulerPriority currentPriority_{SchedulerPriority::NormalPriority};
+
+  std::atomic_bool isSynchronous_{false};
 
   void scheduleWorkLoop();
   void startWorkLoop(jsi::Runtime& runtime, bool onlyExpired);
@@ -162,18 +168,15 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
    */
   void executeTask(
       jsi::Runtime& runtime,
-      Task& task,
+      const std::shared_ptr<Task>& task,
       RuntimeSchedulerTimePoint currentTime);
 
   void executeMacrotask(
       jsi::Runtime& runtime,
-      Task& task,
+      std::shared_ptr<Task> task,
       bool didUserCallbackTimeout) const;
 
   void updateRendering();
-
-  bool performingMicrotaskCheckpoint_{false};
-  void performMicrotaskCheckpoint(jsi::Runtime& runtime);
 
   /*
    * Returns a time point representing the current point in time. May be called
@@ -188,8 +191,6 @@ class RuntimeScheduler_Modern final : public RuntimeSchedulerBase {
   bool isWorkLoopScheduled_{false};
 
   std::queue<RuntimeSchedulerRenderingUpdate> pendingRenderingUpdates_;
-  ShadowTreeRevisionConsistencyManager* shadowTreeRevisionConsistencyManager_{
-      nullptr};
 };
 
 } // namespace facebook::react

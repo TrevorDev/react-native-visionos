@@ -12,11 +12,12 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.config.ReactFeatureFlags;
+import com.facebook.react.devsupport.DisabledDevSupportManager;
 import com.facebook.react.devsupport.DoubleTapReloadRecognizer;
-import com.facebook.react.devsupport.ReleaseDevSupportManager;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.interfaces.fabric.ReactSurface;
 import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
@@ -42,7 +43,7 @@ public class ReactDelegate {
 
   @Nullable private ReactSurface mReactSurface;
 
-  private boolean mFabricEnabled = ReactFeatureFlags.enableFabricRenderer;
+  private boolean mFabricEnabled = false;
 
   /**
    * Do not use this constructor as it's not accounting for New Architecture at all. You should
@@ -86,7 +87,7 @@ public class ReactDelegate {
     mFabricEnabled = fabricEnabled;
     mActivity = activity;
     mMainComponentName = appKey;
-    mLaunchOptions = launchOptions;
+    mLaunchOptions = composeLaunchOptions(launchOptions);
     mDoubleTapReloadRecognizer = new DoubleTapReloadRecognizer();
     mReactNativeHost = reactNativeHost;
   }
@@ -106,17 +107,20 @@ public class ReactDelegate {
   }
 
   public void onHostResume() {
-    if (!(mActivity instanceof DefaultHardwareBackBtnHandler)) {
-      throw new ClassCastException(
-          "Host Activity does not implement DefaultHardwareBackBtnHandler");
-    }
     if (ReactFeatureFlags.enableBridgelessArchitecture) {
-      mReactHost.onHostResume(mActivity, (DefaultHardwareBackBtnHandler) mActivity);
+      if (mActivity instanceof DefaultHardwareBackBtnHandler) {
+        mReactHost.onHostResume(mActivity, (DefaultHardwareBackBtnHandler) mActivity);
+      }
     } else {
       if (getReactNativeHost().hasInstance()) {
-        getReactNativeHost()
-            .getReactInstanceManager()
-            .onHostResume(mActivity, (DefaultHardwareBackBtnHandler) mActivity);
+        if (mActivity instanceof DefaultHardwareBackBtnHandler) {
+          getReactNativeHost()
+              .getReactInstanceManager()
+              .onHostResume(mActivity, (DefaultHardwareBackBtnHandler) mActivity);
+        } else {
+          throw new ClassCastException(
+              "Host Activity does not implement DefaultHardwareBackBtnHandler");
+        }
       }
     }
   }
@@ -239,7 +243,7 @@ public class ReactDelegate {
     DevSupportManager devSupportManager = getDevSupportManager();
     if (devSupportManager != null) {
       // With Bridgeless enabled, reload in RELEASE mode
-      if (devSupportManager instanceof ReleaseDevSupportManager
+      if (devSupportManager instanceof DisabledDevSupportManager
           && ReactFeatureFlags.enableBridgelessArchitecture
           && mReactHost != null) {
         // Do not reload the bundle from JS as there is no bundler running in release mode.
@@ -282,7 +286,6 @@ public class ReactDelegate {
     }
   }
 
-  // Not used in bridgeless
   protected ReactRootView createRootView() {
     ReactRootView reactRootView = new ReactRootView(mActivity);
     reactRootView.setIsFabric(isFabricEnabled());
@@ -333,5 +336,14 @@ public class ReactDelegate {
    */
   protected boolean isFabricEnabled() {
     return mFabricEnabled;
+  }
+
+  private @NonNull Bundle composeLaunchOptions(Bundle composedLaunchOptions) {
+    if (isFabricEnabled()) {
+      if (composedLaunchOptions == null) {
+        composedLaunchOptions = new Bundle();
+      }
+    }
+    return composedLaunchOptions;
   }
 }

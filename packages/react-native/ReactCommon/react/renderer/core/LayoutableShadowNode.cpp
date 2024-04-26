@@ -20,7 +20,7 @@ template <class T>
 using LayoutableSmallVector = std::vector<T>;
 
 static LayoutableSmallVector<Rect> calculateTransformedFrames(
-    const LayoutableSmallVector<const ShadowNode*>& shadowNodeList,
+    const LayoutableSmallVector<ShadowNode const*>& shadowNodeList,
     LayoutableShadowNode::LayoutInspectingPolicy policy) {
   auto size = shadowNodeList.size();
   auto transformedFrames = LayoutableSmallVector<Rect>{size};

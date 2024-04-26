@@ -398,7 +398,7 @@ BorderMetrics BaseViewProps::resolveBorderMetrics(
 }
 
 Transform BaseViewProps::resolveTransform(
-    const LayoutMetrics& layoutMetrics) const {
+    LayoutMetrics const& layoutMetrics) const {
   float viewWidth = layoutMetrics.frame.size.width;
   float viewHeight = layoutMetrics.frame.size.height;
   if (!transformOrigin.isSet() || (viewWidth == 0 && viewHeight == 0)) {

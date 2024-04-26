@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<dceb20e62a9ddbb98c872a24fab9765c>>
+ * @generated SignedSource<<c5388e841a06044520f6c89fcca27286>>
  */
 
 /**
@@ -25,37 +25,21 @@ import com.facebook.proguard.annotations.DoNotStrip
 public interface ReactNativeFeatureFlagsProvider {
   @DoNotStrip public fun commonTestFlag(): Boolean
 
-  @DoNotStrip public fun androidEnablePendingFabricTransactions(): Boolean
-
-  @DoNotStrip public fun batchRenderingUpdatesInEventLoop(): Boolean
-
-  @DoNotStrip public fun destroyFabricSurfacesInReactInstanceManager(): Boolean
-
   @DoNotStrip public fun enableBackgroundExecutor(): Boolean
 
-  @DoNotStrip public fun enableCleanTextInputYogaNode(): Boolean
-
-  @DoNotStrip public fun enableCustomDrawOrderFabric(): Boolean
+  @DoNotStrip public fun useModernRuntimeScheduler(): Boolean
 
   @DoNotStrip public fun enableMicrotasks(): Boolean
 
+  @DoNotStrip public fun batchRenderingUpdatesInEventLoop(): Boolean
+
   @DoNotStrip public fun enableSpannableBuildingUnification(): Boolean
 
-  @DoNotStrip public fun enableSynchronousStateUpdates(): Boolean
+  @DoNotStrip public fun enableCustomDrawOrderFabric(): Boolean
 
-  @DoNotStrip public fun enableUIConsistency(): Boolean
-
-  @DoNotStrip public fun forceBatchingMountItemsOnAndroid(): Boolean
+  @DoNotStrip public fun enableFixForClippedSubviewsCrash(): Boolean
 
   @DoNotStrip public fun inspectorEnableCxxInspectorPackagerConnection(): Boolean
 
   @DoNotStrip public fun inspectorEnableModernCDPRegistry(): Boolean
-
-  @DoNotStrip public fun preventDoubleTextMeasure(): Boolean
-
-  @DoNotStrip public fun useModernRuntimeScheduler(): Boolean
-
-  @DoNotStrip public fun useNativeViewConfigsInBridgelessMode(): Boolean
-
-  @DoNotStrip public fun useStateAlignmentMechanism(): Boolean
 }

@@ -15,7 +15,7 @@ import com.facebook.infer.annotation.Nullsafe;
  * Communication is enabled via the Inspector, but everything else is disabled.
  */
 @Nullsafe(Nullsafe.Mode.LOCAL)
-public final class PerftestDevSupportManager extends ReleaseDevSupportManager {
+public final class PerftestDevSupportManager extends DisabledDevSupportManager {
   private final DevServerHelper mDevServerHelper;
   private final DevInternalSettings mDevSettings;
 

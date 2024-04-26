@@ -564,9 +564,9 @@ class ReactNativePodsUtils
     end
 
     def self.set_codegen_search_paths(target_installation_result)
-        header_search_paths = ReactNativePodsUtils.create_header_search_path_for_frameworks("PODS_CONFIGURATION_BUILD_DIR", "ReactCodegen", "ReactCodegen", [])
+        header_search_paths = ReactNativePodsUtils.create_header_search_path_for_frameworks("PODS_CONFIGURATION_BUILD_DIR", "React-Codegen", "React_Codegen", [])
             .map { |search_path| "\"#{search_path}\"" }
-        ReactNativePodsUtils.update_header_paths_if_depends_on(target_installation_result, "ReactCodegen", header_search_paths)
+        ReactNativePodsUtils.update_header_paths_if_depends_on(target_installation_result, "React-Codegen", header_search_paths)
     end
 
     def self.set_reactcommon_searchpaths(target_installation_result)
@@ -625,7 +625,7 @@ class ReactNativePodsUtils
             }
             path = File.join(user_project.path.parent, "PrivacyInfo.xcprivacy")
             Xcodeproj::Plist.write_to_path(privacy_manifest, path)
-            Pod::UI.puts "Your app does not have a privacy manifest! A template has been generated containing Required Reasons API usage in the core React Native library. Please add the PrivacyInfo.xcprivacy file to your project and complete data use, tracking and any additional required reasons your app is using according to Apple's guidance: https://developer.apple.com/documentation/bundleresources/privacy_manifest_files. Then, you will need to manually add this file to your project in Xcode.".red
+            Pod::UI.puts "Your app does not have a privacy manifest! A template has been generated containing Required Reasons API usage in the core React Native library. Please add the PrivacyInfo.xcprivacy file to your project and complete data use, tracking and any additional required reasons your app is using according to Apple's guidance: https://developer.apple.com/.../privacy_manifest_files. Then, you will need to manually add this file to your project in Xcode.".red
         end
     end
 
@@ -637,7 +637,7 @@ class ReactNativePodsUtils
             "RCTRequired",
             "RCTTypeSafety",
             "React",
-            "ReactCodegen",
+            "React-Codegen",
             "React-Core",
             "React-CoreModules",
             "React-Fabric",

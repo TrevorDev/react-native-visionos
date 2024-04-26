@@ -9,45 +9,16 @@
 
 'use strict';
 
-// React Native shouldn't be exporting itself like this, the Community Template should be be directly
-// depending on and injecting:
-// - @react-native-community/cli-platform-android
-// - @react-native-community/cli-platform-ios
-// - @react-native/community-cli-plugin (via the @react-native/core-cli-utils package)
-// - codegen command should be inhoused into @react-native-community/cli
-//
-// This is a temporary workaround.
-
-const verbose = process.env.DEBUG && process.env.DEBUG.includes('react-native');
-
-let android;
-try {
-  android = require('@react-native-community/cli-platform-android');
-} catch {
-  if (verbose) {
-    console.warn(
-      '@react-native-community/cli-platform-android not found, the react-native.config.js may be unusable.',
-    );
-  }
-}
-
-let ios;
-let apple;
-try {
-  ios = require('@react-native-community/cli-platform-ios');
-  apple = require('@react-native-community/cli-platform-apple');
-} catch {
-  if (verbose) {
-    console.warn(
-      '@react-native-community/cli-platform-ios not found, the react-native.config.js may be unusable.',
-    );
-  }
-}
-
 const localCommands = require('./local-cli/localCommands');
-
+const android = require('@react-native-community/cli-platform-android');
+const {
+  getDependencyConfig,
+  getProjectConfig,
+} = require('@react-native-community/cli-platform-apple');
+const ios = require('@react-native-community/cli-platform-ios');
 const {
   bundleCommand,
+  ramBundleCommand,
   startCommand,
 } = require('@react-native/community-cli-plugin');
 
@@ -78,31 +49,29 @@ const codegenCommand = {
     ),
 };
 
-const config = {
-  commands: [bundleCommand, startCommand, codegenCommand, ...localCommands],
+module.exports = {
+  commands: [
+    ...ios.commands,
+    ...android.commands,
+    bundleCommand,
+    ramBundleCommand,
+    startCommand,
+    codegenCommand,
+    ...localCommands,
+  ],
   platforms: {
     visionos: {
       npmPackageName: '@callstack/react-native-visionos',
-      projectConfig: apple.getProjectConfig({platformName: 'visionos'}),
-      dependencyConfig: apple.getDependencyConfig({platformName: 'visionos'}),
+      projectConfig: getProjectConfig({platformName: 'visionos'}),
+      dependencyConfig: getDependencyConfig({platformName: 'visionos'}),
+    },
+    ios: {
+      projectConfig: ios.projectConfig,
+      dependencyConfig: ios.dependencyConfig,
+    },
+    android: {
+      projectConfig: android.projectConfig,
+      dependencyConfig: android.dependencyConfig,
     },
   },
 };
-
-if (ios != null) {
-  config.commands.push(...ios.commands);
-  config.platforms.ios = {
-    projectConfig: ios.projectConfig,
-    dependencyConfig: ios.dependencyConfig,
-  };
-}
-
-if (android != null) {
-  config.commands.push(...android.commands);
-  config.platforms.android = {
-    projectConfig: android.projectConfig,
-    dependencyConfig: android.dependencyConfig,
-  };
-}
-
-module.exports = config;

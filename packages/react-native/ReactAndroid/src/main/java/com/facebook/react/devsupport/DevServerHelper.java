@@ -303,13 +303,7 @@ public class DevServerHelper {
     // [Source: Android docs]
     String androidId = Settings.Secure.ANDROID_ID;
 
-    String rawDeviceId =
-        String.format(
-            Locale.US,
-            "android-%s-%s-%s",
-            packageName,
-            androidId,
-            InspectorFlags.getEnableModernCDPRegistry() ? "fusebox" : "legacy");
+    String rawDeviceId = String.format(Locale.US, "android-%s-%s", packageName, androidId);
 
     return getSHA256(rawDeviceId);
   }
@@ -342,9 +336,7 @@ public class DevServerHelper {
         callback, outputFile, bundleURL, bundleInfo, requestBuilder);
   }
 
-  /**
-   * @return the host to use when connecting to the bundle server from the host itself.
-   */
+  /** @return the host to use when connecting to the bundle server from the host itself. */
   private String getHostForJSProxy() {
     // Use custom port if configured. Note that host stays "localhost".
     String host = Assertions.assertNotNull(mPackagerConnectionSettings.getDebugServerHost());
@@ -356,16 +348,12 @@ public class DevServerHelper {
     }
   }
 
-  /**
-   * @return whether we should enable dev mode when requesting JS bundles.
-   */
+  /** @return whether we should enable dev mode when requesting JS bundles. */
   private boolean getDevMode() {
     return mSettings.isJSDevModeEnabled();
   }
 
-  /**
-   * @return whether we should request minified JS bundles.
-   */
+  /** @return whether we should request minified JS bundles. */
   private boolean getJSMinifyMode() {
     return mSettings.isJSMinifyEnabled();
   }
@@ -497,7 +485,7 @@ public class DevServerHelper {
   }
 
   /** Attempt to open the JS debugger on the host machine (on-device CDP debugging). */
-  public void openDebugger(@Nullable final ReactContext context, final String errorMessage) {
+  public void openDebugger(final ReactContext context, final String errorMessage) {
     // TODO(huntie): Requests to dev server should not assume 'http' URL scheme
     String requestUrl =
         String.format(

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<a1530f969f47f31b8588109e48f527a1>>
+ * @generated SignedSource<<4832483bb3648380f2bb9312311f579c>>
  */
 
 /**
@@ -31,27 +31,11 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
-  bool androidEnablePendingFabricTransactions() override {
-    return false;
-  }
-
-  bool batchRenderingUpdatesInEventLoop() override {
-    return false;
-  }
-
-  bool destroyFabricSurfacesInReactInstanceManager() override {
-    return false;
-  }
-
   bool enableBackgroundExecutor() override {
     return false;
   }
 
-  bool enableCleanTextInputYogaNode() override {
-    return false;
-  }
-
-  bool enableCustomDrawOrderFabric() override {
+  bool useModernRuntimeScheduler() override {
     return false;
   }
 
@@ -59,19 +43,19 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
+  bool batchRenderingUpdatesInEventLoop() override {
+    return false;
+  }
+
   bool enableSpannableBuildingUnification() override {
     return false;
   }
 
-  bool enableSynchronousStateUpdates() override {
+  bool enableCustomDrawOrderFabric() override {
     return false;
   }
 
-  bool enableUIConsistency() override {
-    return false;
-  }
-
-  bool forceBatchingMountItemsOnAndroid() override {
+  bool enableFixForClippedSubviewsCrash() override {
     return false;
   }
 
@@ -80,22 +64,6 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
   }
 
   bool inspectorEnableModernCDPRegistry() override {
-    return false;
-  }
-
-  bool preventDoubleTextMeasure() override {
-    return false;
-  }
-
-  bool useModernRuntimeScheduler() override {
-    return false;
-  }
-
-  bool useNativeViewConfigsInBridgelessMode() override {
-    return false;
-  }
-
-  bool useStateAlignmentMechanism() override {
     return false;
   }
 };

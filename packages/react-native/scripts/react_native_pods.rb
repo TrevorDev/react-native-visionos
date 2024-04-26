@@ -16,14 +16,24 @@ require_relative './cocoapods/new_architecture.rb'
 require_relative './cocoapods/local_podspec_patch.rb'
 require_relative './cocoapods/runtime.rb'
 require_relative './cocoapods/helpers.rb'
-# Importing to expose use_native_modules!
-require_relative './cocoapods/autolinking.rb'
 
 $CODEGEN_OUTPUT_DIR = 'build/generated/ios'
 $CODEGEN_COMPONENT_DIR = 'react/renderer/components'
 $CODEGEN_MODULE_DIR = '.'
 
 $START_TIME = Time.now.to_i
+
+# `@react-native-community/cli-platform-ios/native_modules` defines
+# use_native_modules. We use node to resolve its path to allow for
+# different packager and workspace setups. This is reliant on
+# `@react-native-community/cli-platform-ios` being a direct dependency
+# of `react-native`.
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "@react-native-community/cli-platform-ios/native_modules.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
 
 def min_ios_version_supported
   return Helpers::Constants.min_ios_version_supported
@@ -121,9 +131,6 @@ def use_react_native! (
   pod 'React-debug', :path => "#{prefix}/ReactCommon/react/debug"
   pod 'React-utils', :path => "#{prefix}/ReactCommon/react/utils"
   pod 'React-featureflags', :path => "#{prefix}/ReactCommon/react/featureflags"
-  pod 'React-featureflagsnativemodule', :path => "#{prefix}/ReactCommon/react/nativemodule/featureflags"
-  pod 'React-microtasksnativemodule', :path => "#{prefix}/ReactCommon/react/nativemodule/microtasks"
-  pod 'React-domnativemodule', :path => "#{prefix}/ReactCommon/react/nativemodule/dom"
   pod 'React-Mapbuffer', :path => "#{prefix}/ReactCommon"
   pod 'React-jserrorhandler', :path => "#{prefix}/ReactCommon/jserrorhandler"
   pod 'React-nativeconfig', :path => "#{prefix}/ReactCommon"
@@ -142,11 +149,9 @@ def use_react_native! (
   pod 'React-jsinspector', :path => "#{prefix}/ReactCommon/jsinspector-modern"
 
   pod 'React-callinvoker', :path => "#{prefix}/ReactCommon/callinvoker"
-  pod 'React-performancetimeline', :path => "#{prefix}/ReactCommon/react/performance/timeline"
   pod 'React-runtimeexecutor', :path => "#{prefix}/ReactCommon/runtimeexecutor"
   pod 'React-runtimescheduler', :path => "#{prefix}/ReactCommon/react/renderer/runtimescheduler"
   pod 'React-rendererdebug', :path => "#{prefix}/ReactCommon/react/renderer/debug"
-  pod 'React-rendererconsistency', :path => "#{prefix}/ReactCommon/react/renderer/consistency"
   pod 'React-perflogger', :path => "#{prefix}/ReactCommon/reactperflogger"
   pod 'React-logger', :path => "#{prefix}/ReactCommon/logger"
   pod 'ReactCommon/turbomodule/core', :path => "#{prefix}/ReactCommon", :modular_headers => true
@@ -176,7 +181,7 @@ def use_react_native! (
     :folly_version => folly_config[:version]
   )
 
-  pod 'ReactCodegen', :path => $CODEGEN_OUTPUT_DIR, :modular_headers => true
+  pod 'React-Codegen', :path => $CODEGEN_OUTPUT_DIR, :modular_headers => true
 
   # Always need fabric to access the RCTSurfacePresenterBridgeAdapter which allow to enable the RuntimeScheduler
   # If the New Arch is turned off, we will use the Old Renderer, though.
@@ -293,7 +298,7 @@ def react_native_post_install(
   ReactNativePodsUtils.set_use_hermes_build_setting(installer, hermes_enabled)
   ReactNativePodsUtils.set_node_modules_user_settings(installer, react_native_path)
   ReactNativePodsUtils.set_ccache_compiler_and_linker_build_settings(installer, react_native_path, ccache_enabled)
-  ReactNativePodsUtils.apply_xcode_15_patch(installer)
+  ReactNativePodsUtils.apply_xcode_15_patch(installer) 
   ReactNativePodsUtils.updateOSDeploymentTarget(installer)
   ReactNativePodsUtils.set_dynamic_frameworks_flags(installer)
   ReactNativePodsUtils.add_ndebug_flag_to_pods_in_release(installer)

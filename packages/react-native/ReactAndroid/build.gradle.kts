@@ -99,6 +99,8 @@ val preparePrefab by
               PrefabPreprocessingEntry(
                   "react_newarchdefaults", Pair("src/main/jni/react/newarchdefaults", "")),
               PrefabPreprocessingEntry(
+                  "react_cxxreactpackage", Pair("src/main/jni/react/runtime/cxxreactpackage", "")),
+              PrefabPreprocessingEntry(
                   "react_render_animations",
                   Pair("../ReactCommon/react/renderer/animations/", "react/renderer/animations/")),
               PrefabPreprocessingEntry(
@@ -185,6 +187,7 @@ val preparePrefab by
                       Pair(File(buildDir, "third-party-ndk/fmt/include/").absolutePath, ""),
                       Pair(File(buildDir, "third-party-ndk/folly/").absolutePath, ""),
                       Pair(File(buildDir, "third-party-ndk/glog/exported/").absolutePath, ""),
+                      Pair("../ReactCommon/butter/", "butter/"),
                       Pair("../ReactCommon/callinvoker/", ""),
                       Pair("../ReactCommon/cxxreact/", "cxxreact/"),
                       Pair("../ReactCommon/react/bridging/", "react/bridging/"),
@@ -213,8 +216,6 @@ val preparePrefab by
                       Pair("../ReactCommon/react/debug/", "react/debug/"),
                       Pair("../ReactCommon/react/utils/", "react/utils/"),
                       Pair("src/main/jni/react/jni", "react/jni/"),
-                      // From: react_cxxreactpackage
-                      Pair("src/main/jni/react/runtime/cxxreactpackage", ""),
                   )),
               PrefabPreprocessingEntry(
                   "react_utils",
@@ -541,6 +542,7 @@ android {
         targets(
             "jsijniprofiler",
             "reactnativeblob",
+            "reactperfloggerjni",
             "bridgeless",
             "rninstance",
             "hermesinstancejni",
@@ -556,16 +558,13 @@ android {
             "react_codegen_rncore",
             "react_debug",
             "react_featureflags",
-            "react_performance_timeline",
             "react_utils",
             "react_render_componentregistry",
             "react_newarchdefaults",
+            "react_cxxreactpackage",
             "react_render_animations",
             "react_render_core",
-            "react_render_consistency",
-            "react_render_dom",
             "react_render_graphics",
-            "react_render_observers_events",
             "rrc_image",
             "rrc_root",
             "rrc_view",
@@ -582,7 +581,6 @@ android {
             "react_nativemodule_core",
             "react_render_imagemanager",
             "react_render_uimanager",
-            "react_render_uimanager_consistency",
             "react_render_scheduler",
             "react_render_mounting",
             "hermes_executor",
@@ -681,6 +679,9 @@ android {
     }
     create("react_newarchdefaults") {
       headers = File(prefabHeadersDir, "react_newarchdefaults").absolutePath
+    }
+    create("react_cxxreactpackage") {
+      headers = File(prefabHeadersDir, "react_cxxreactpackage").absolutePath
     }
     create("react_render_animations") {
       headers = File(prefabHeadersDir, "react_render_animations").absolutePath

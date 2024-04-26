@@ -94,9 +94,7 @@ public class ReactImageManager extends SimpleViewManager<ReactImageView> {
     return mDraweeControllerBuilder;
   }
 
-  /**
-   * @deprecated use {@link ReactCallerContextFactory} instead
-   */
+  /** @deprecated use {@link ReactCallerContextFactory} instead */
   @Deprecated
   public Object getCallerContext() {
     return mCallerContext;

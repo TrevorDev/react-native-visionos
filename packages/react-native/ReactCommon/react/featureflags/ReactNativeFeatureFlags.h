@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<5a5c6772253f49b0b768cd7ef090af14>>
+ * @generated SignedSource<<3bfae310dfd28040f4b80d1a1df8b7b3>>
  */
 
 /**
@@ -23,10 +23,6 @@
 #include <react/featureflags/ReactNativeFeatureFlagsProvider.h>
 #include <memory>
 
-#ifndef RN_EXPORT
-#define RN_EXPORT __attribute__((visibility("default")))
-#endif
-
 namespace facebook::react {
 
 /**
@@ -40,92 +36,52 @@ class ReactNativeFeatureFlags {
   /**
    * Common flag for testing. Do NOT modify.
    */
-  RN_EXPORT static bool commonTestFlag();
-
-  /**
-   * To be used with batchRenderingUpdatesInEventLoop. When enbled, the Android mounting layer will concatenate pending transactions to ensure they're applied atomatically
-   */
-  RN_EXPORT static bool androidEnablePendingFabricTransactions();
-
-  /**
-   * When enabled, the RuntimeScheduler processing the event loop will batch all rendering updates and dispatch them together at the end of each iteration of the loop.
-   */
-  RN_EXPORT static bool batchRenderingUpdatesInEventLoop();
-
-  /**
-   * When enabled, ReactInstanceManager will clean up Fabric surfaces on destroy().
-   */
-  RN_EXPORT static bool destroyFabricSurfacesInReactInstanceManager();
+  static bool commonTestFlag();
 
   /**
    * Enables the use of a background executor to compute layout and commit updates on Fabric (this system is deprecated and should not be used).
    */
-  RN_EXPORT static bool enableBackgroundExecutor();
-
-  /**
-   * Clean yoga node when <TextInput /> does not change.
-   */
-  RN_EXPORT static bool enableCleanTextInputYogaNode();
-
-  /**
-   * When enabled, Fabric will use customDrawOrder in ReactViewGroup (similar to old architecture).
-   */
-  RN_EXPORT static bool enableCustomDrawOrderFabric();
-
-  /**
-   * Enables the use of microtasks in Hermes (scheduling) and RuntimeScheduler (execution).
-   */
-  RN_EXPORT static bool enableMicrotasks();
-
-  /**
-   * Uses new, deduplicated logic for constructing Android Spannables from text fragments
-   */
-  RN_EXPORT static bool enableSpannableBuildingUnification();
-
-  /**
-   * Dispatches state updates synchronously in Fabric (e.g.: updates the scroll position in the shadow tree synchronously from the main thread).
-   */
-  RN_EXPORT static bool enableSynchronousStateUpdates();
-
-  /**
-   * Ensures that JavaScript always has a consistent view of the state of the UI (e.g.: commits done in other threads are not immediately propagated to JS during its execution).
-   */
-  RN_EXPORT static bool enableUIConsistency();
-
-  /**
-   * Forces the mounting layer on Android to always batch mount items instead of dispatching them immediately. This might fix some crashes related to synchronous state updates, where some views dispatch state updates during mount.
-   */
-  RN_EXPORT static bool forceBatchingMountItemsOnAndroid();
-
-  /**
-   * Flag determining if the C++ implementation of InspectorPackagerConnection should be used instead of the per-platform one. This flag is global and should not be changed across React Host lifetimes.
-   */
-  RN_EXPORT static bool inspectorEnableCxxInspectorPackagerConnection();
-
-  /**
-   * Flag determining if the modern CDP backend should be enabled. This flag is global and should not be changed across React Host lifetimes.
-   */
-  RN_EXPORT static bool inspectorEnableModernCDPRegistry();
-
-  /**
-   * When enabled, ParagraphShadowNode will no longer call measure twice.
-   */
-  RN_EXPORT static bool preventDoubleTextMeasure();
+  static bool enableBackgroundExecutor();
 
   /**
    * When enabled, it uses the modern fork of RuntimeScheduler that allows scheduling tasks with priorities from any thread.
    */
-  RN_EXPORT static bool useModernRuntimeScheduler();
+  static bool useModernRuntimeScheduler();
 
   /**
-   * When enabled, the native view configs are used in bridgeless mode.
+   * Enables the use of microtasks in Hermes (scheduling) and RuntimeScheduler (execution).
    */
-  RN_EXPORT static bool useNativeViewConfigsInBridgelessMode();
+  static bool enableMicrotasks();
 
   /**
-   * When enabled, it uses optimised state reconciliation algorithm.
+   * When enabled, the RuntimeScheduler processing the event loop will batch all rendering updates and dispatch them together at the end of each iteration of the loop.
    */
-  RN_EXPORT static bool useStateAlignmentMechanism();
+  static bool batchRenderingUpdatesInEventLoop();
+
+  /**
+   * Uses new, deduplicated logic for constructing Android Spannables from text fragments
+   */
+  static bool enableSpannableBuildingUnification();
+
+  /**
+   * When enabled, Fabric will use customDrawOrder in ReactViewGroup (similar to old architecture).
+   */
+  static bool enableCustomDrawOrderFabric();
+
+  /**
+   * Attempt at fixing a crash related to subview clipping on Android. This is a kill switch for the fix
+   */
+  static bool enableFixForClippedSubviewsCrash();
+
+  /**
+   * Flag determining if the C++ implementation of InspectorPackagerConnection should be used instead of the per-platform one. This flag is global and should not be changed across React Host lifetimes.
+   */
+  static bool inspectorEnableCxxInspectorPackagerConnection();
+
+  /**
+   * Flag determining if the modern CDP backend should be enabled. This flag is global and should not be changed across React Host lifetimes.
+   */
+  static bool inspectorEnableModernCDPRegistry();
 
   /**
    * Overrides the feature flags with the ones provided by the given provider
@@ -145,7 +101,7 @@ class ReactNativeFeatureFlags {
    *     std::make_unique<MyReactNativeFeatureFlags>());
    * ```
    */
-  RN_EXPORT static void override(
+  static void override(
       std::unique_ptr<ReactNativeFeatureFlagsProvider> provider);
 
   /**
@@ -160,7 +116,7 @@ class ReactNativeFeatureFlags {
    * call `dangerouslyReset` after destroying the runtime and `override` again
    * before initializing the new one.
    */
-  RN_EXPORT static void dangerouslyReset();
+  static void dangerouslyReset();
 
  private:
   ReactNativeFeatureFlags() = delete;

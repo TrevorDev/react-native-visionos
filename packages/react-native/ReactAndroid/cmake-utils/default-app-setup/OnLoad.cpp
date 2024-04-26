@@ -32,7 +32,6 @@
 #include <fbjni/fbjni.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <rncli.h>
-#include <rncore.h>
 
 #ifdef REACT_NATIVE_APP_CODEGEN_HEADER
 #include REACT_NATIVE_APP_CODEGEN_HEADER
@@ -96,17 +95,8 @@ std::shared_ptr<TurboModule> javaModuleProvider(
   }
 #endif
 
-  // We first try to look up core modules
-  if (auto module = rncore_ModuleProvider(name, params)) {
-    return module;
-  }
-
   // And we fallback to the module providers autolinked by RN CLI
-  if (auto module = rncli_ModuleProvider(name, params)) {
-    return module;
-  }
-
-  return nullptr;
+  return rncli_ModuleProvider(name, params);
 }
 
 } // namespace facebook::react

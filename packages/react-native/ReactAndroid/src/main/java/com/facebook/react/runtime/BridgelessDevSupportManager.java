@@ -51,8 +51,7 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
         2 /* minNumShakes */,
         null /* customPackagerCommandHandlers */,
         null /* surfaceDelegateFactory */,
-        null /* devLoadingViewManager */,
-        null /* pausedInDebuggerOverlayManager */);
+        null /* devLoadingViewManager */);
     mReactHost = host;
   }
 

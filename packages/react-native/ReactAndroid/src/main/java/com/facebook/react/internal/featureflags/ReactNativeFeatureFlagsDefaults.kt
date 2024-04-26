@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<d12888990ebca7c6199f4b51802ee59b>>
+ * @generated SignedSource<<cc8e437bf2f486949f256a19d3d73a1e>>
  */
 
 /**
@@ -25,37 +25,21 @@ public open class ReactNativeFeatureFlagsDefaults : ReactNativeFeatureFlagsProvi
 
   override fun commonTestFlag(): Boolean = false
 
-  override fun androidEnablePendingFabricTransactions(): Boolean = false
-
-  override fun batchRenderingUpdatesInEventLoop(): Boolean = false
-
-  override fun destroyFabricSurfacesInReactInstanceManager(): Boolean = false
-
   override fun enableBackgroundExecutor(): Boolean = false
 
-  override fun enableCleanTextInputYogaNode(): Boolean = false
-
-  override fun enableCustomDrawOrderFabric(): Boolean = false
+  override fun useModernRuntimeScheduler(): Boolean = false
 
   override fun enableMicrotasks(): Boolean = false
 
+  override fun batchRenderingUpdatesInEventLoop(): Boolean = false
+
   override fun enableSpannableBuildingUnification(): Boolean = false
 
-  override fun enableSynchronousStateUpdates(): Boolean = false
+  override fun enableCustomDrawOrderFabric(): Boolean = false
 
-  override fun enableUIConsistency(): Boolean = false
-
-  override fun forceBatchingMountItemsOnAndroid(): Boolean = false
+  override fun enableFixForClippedSubviewsCrash(): Boolean = false
 
   override fun inspectorEnableCxxInspectorPackagerConnection(): Boolean = false
 
   override fun inspectorEnableModernCDPRegistry(): Boolean = false
-
-  override fun preventDoubleTextMeasure(): Boolean = false
-
-  override fun useModernRuntimeScheduler(): Boolean = false
-
-  override fun useNativeViewConfigsInBridgelessMode(): Boolean = false
-
-  override fun useStateAlignmentMechanism(): Boolean = false
 }

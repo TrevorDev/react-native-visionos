@@ -88,7 +88,7 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
   // APIs supporting interop with native modules and view managers
   RCTBridgeModuleDecorator *_bridgeModuleDecorator;
 
-  jsinspector_modern::HostTarget *_parentInspectorTarget;
+  jsinspector_modern::PageTarget *_parentInspectorTarget;
 }
 
 #pragma mark - Public
@@ -99,7 +99,7 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
       turboModuleManagerDelegate:(id<RCTTurboModuleManagerDelegate>)tmmDelegate
              onInitialBundleLoad:(RCTInstanceInitialBundleLoadCompletionBlock)onInitialBundleLoad
                   moduleRegistry:(RCTModuleRegistry *)moduleRegistry
-           parentInspectorTarget:(jsinspector_modern::HostTarget *)parentInspectorTarget
+           parentInspectorTarget:(jsinspector_modern::PageTarget *)parentInspectorTarget
                    launchOptions:(nullable NSDictionary *)launchOptions
 {
   if (self = [super init]) {
@@ -168,7 +168,6 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
     self->_jsRuntimeFactory = nullptr;
     self->_appTMMDelegate = nil;
     self->_delegate = nil;
-    [self->_displayLink invalidate];
     self->_displayLink = nil;
 
     self->_turboModuleManager = nil;
@@ -242,14 +241,14 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
   objCTimerRegistryRawPtr->setTimerManager(timerManager);
 
   __weak __typeof(self) weakSelf = self;
-  auto onJsError = [=](const JsErrorHandler::ParsedError &error) { [weakSelf _handleJSError:error]; };
+  auto jsErrorHandlingFunc = [=](MapBuffer errorMap) { [weakSelf _handleJSErrorMap:std::move(errorMap)]; };
 
   // Create the React Instance
   _reactInstance = std::make_unique<ReactInstance>(
       _jsRuntimeFactory->createJSRuntime(_jsThreadManager.jsMessageThread),
       _jsThreadManager.jsMessageThread,
       timerManager,
-      onJsError,
+      jsErrorHandlingFunc,
       _parentInspectorTarget);
   _valid = true;
 
@@ -494,23 +493,28 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
   }
 }
 
-- (void)_handleJSError:(const JsErrorHandler::ParsedError &)error
+- (void)_handleJSErrorMap:(facebook::react::MapBuffer)errorMap
 {
-  NSString *message = [NSString stringWithCString:error.message.c_str() encoding:[NSString defaultCStringEncoding]];
+  NSString *message = [NSString stringWithCString:errorMap.getString(JSErrorHandlerKey::kErrorMessage).c_str()
+                                         encoding:[NSString defaultCStringEncoding]];
+  std::vector<facebook::react::MapBuffer> frames = errorMap.getMapBufferList(JSErrorHandlerKey::kAllStackFrames);
   NSMutableArray<NSDictionary<NSString *, id> *> *stack = [NSMutableArray new];
-  for (const JsErrorHandler::ParsedError::StackFrame &frame : error.frames) {
-    [stack addObject:@{
-      @"file" : [NSString stringWithCString:frame.fileName.c_str() encoding:[NSString defaultCStringEncoding]],
-      @"methodName" : [NSString stringWithCString:frame.methodName.c_str() encoding:[NSString defaultCStringEncoding]],
-      @"lineNumber" : [NSNumber numberWithInt:frame.lineNumber],
-      @"column" : [NSNumber numberWithInt:frame.columnNumber],
-    }];
+  for (const facebook::react::MapBuffer &mapBuffer : frames) {
+    NSDictionary *frame = @{
+      @"file" : [NSString stringWithCString:mapBuffer.getString(JSErrorHandlerKey::kFrameFileName).c_str()
+                                   encoding:[NSString defaultCStringEncoding]],
+      @"methodName" : [NSString stringWithCString:mapBuffer.getString(JSErrorHandlerKey::kFrameMethodName).c_str()
+                                         encoding:[NSString defaultCStringEncoding]],
+      @"lineNumber" : [NSNumber numberWithInt:mapBuffer.getInt(JSErrorHandlerKey::kFrameLineNumber)],
+      @"column" : [NSNumber numberWithInt:mapBuffer.getInt(JSErrorHandlerKey::kFrameColumnNumber)],
+    };
+    [stack addObject:frame];
   }
   [_delegate instance:self
       didReceiveJSErrorStack:stack
                      message:message
-                 exceptionId:error.exceptionId
-                     isFatal:error.isFatal];
+                 exceptionId:errorMap.getInt(JSErrorHandlerKey::kExceptionId)
+                     isFatal:errorMap.getBool(JSErrorHandlerKey::kIsFatal)];
 }
 
 @end

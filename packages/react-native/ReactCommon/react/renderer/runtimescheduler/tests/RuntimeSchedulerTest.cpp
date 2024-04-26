@@ -200,7 +200,13 @@ TEST_P(
           return jsi::Value::undefined();
         });
 
-    runtime_->queueMicrotask(microtaskCallback);
+    // Hermes doesn't expose a C++ API to schedule microtasks, so we just access
+    // the API that it exposes to JS.
+    auto global = runtime_->global();
+    auto enqueueJobFn = global.getPropertyAsObject(*runtime_, "HermesInternal")
+                            .getPropertyAsFunction(*runtime_, "enqueueJob");
+
+    enqueueJobFn.call(*runtime_, std::move(microtaskCallback));
 
     return jsi::Value::undefined();
   });
@@ -364,8 +370,8 @@ TEST_P(RuntimeSchedulerTest, continuationTask) {
         jsi::PropNameID::forUtf8(*runtime_, ""),
         1,
         [&](jsi::Runtime& /*runtime*/,
-            const jsi::Value& /*unused*/,
-            const jsi::Value* /*arguments*/,
+            jsi::Value const& /*unused*/,
+            jsi::Value const* /*arguments*/,
             size_t /*unused*/) noexcept -> jsi::Value {
           didContinuationTask = true;
           return jsi::Value::undefined();
@@ -777,9 +783,11 @@ TEST_P(RuntimeSchedulerTest, basicSameThreadExecution) {
   bool didRunSynchronousTask = false;
   std::thread t1([this, &didRunSynchronousTask]() {
     runtimeScheduler_->executeNowOnTheSameThread(
-        [&didRunSynchronousTask](jsi::Runtime& /*rt*/) {
+        [this, &didRunSynchronousTask](jsi::Runtime& /*rt*/) {
+          EXPECT_TRUE(runtimeScheduler_->getIsSynchronous());
           didRunSynchronousTask = true;
         });
+    EXPECT_FALSE(runtimeScheduler_->getIsSynchronous());
   });
 
   auto hasTask = stubQueue_->waitForTask();

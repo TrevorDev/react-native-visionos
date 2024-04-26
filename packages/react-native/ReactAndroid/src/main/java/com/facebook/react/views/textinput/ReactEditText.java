@@ -1219,7 +1219,7 @@ public class ReactEditText extends AppCompatEditText {
     }
 
     addSpansFromStyleAttributes(sb);
-    TextLayoutManager.setCachedSpannableForTag(getId(), sb);
+    TextLayoutManager.setCachedSpannabledForTag(getId(), sb);
   }
 
   void setEventDispatcher(@Nullable EventDispatcher eventDispatcher) {

@@ -13,7 +13,7 @@ package = JSON.parse(File.read(File.join(react_native_path, "package.json")))
 version = package['version']
 
 # Temporaily build from source until visionOS supports prebuilt binaries
-source_type = HermesEngineSourceType::BUILD_FROM_GITHUB_MAIN # hermes_source_type(version, react_native_path)
+source_type = HermesEngineSourceType::BUILD_FROM_GITHUB_TAG # hermes_source_type(version, react_native_path)
 source = podspec_source(source_type, version, react_native_path)
 
 Pod::Spec.new do |spec|
@@ -80,12 +80,6 @@ Pod::Spec.new do |spec|
       ss.source_files = ''
       ss.public_header_files = 'API/hermes/*.h'
       ss.header_dir = 'hermes'
-    end
-
-    spec.subspec 'cdp' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'API/hermes/cdp/*.h'
-      ss.header_dir = 'hermes/cdp'
     end
 
     spec.subspec 'inspector' do |ss|

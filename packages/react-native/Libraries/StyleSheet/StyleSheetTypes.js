@@ -644,9 +644,9 @@ type ____LayoutStyle_Internal = $ReadOnly<{
    * between children may be larger than the gap value.
    * See https://developer.mozilla.org/en-US/docs/Web/CSS/gap for more details.
    */
-  rowGap?: number | string,
-  columnGap?: number | string,
-  gap?: number | string,
+  rowGap?: number,
+  columnGap?: number,
+  gap?: number,
 }>;
 
 /**
@@ -921,5 +921,5 @@ export type ____FlattenStyleProp_Internal<
 > = TStyleProp extends null | void | false | ''
   ? empty
   : TStyleProp extends $ReadOnlyArray<infer V>
-    ? ____FlattenStyleProp_Internal<V>
-    : TStyleProp;
+  ? ____FlattenStyleProp_Internal<V>
+  : TStyleProp;

@@ -11,6 +11,7 @@
 import type {HighResTimeStamp, PerformanceEntryType} from './PerformanceEntry';
 
 import warnOnce from '../../../../Libraries/Utilities/warnOnce';
+import NativePerformanceObserver from './NativePerformanceObserver';
 import {PerformanceEntry} from './PerformanceEntry';
 import PerformanceEventTiming from './PerformanceEventTiming';
 import {
@@ -18,11 +19,8 @@ import {
   rawToPerformanceEntry,
   rawToPerformanceEntryType,
 } from './RawPerformanceEntry';
-import NativePerformanceObserver from './specs/NativePerformanceObserver';
 
 export type PerformanceEntryList = $ReadOnlyArray<PerformanceEntry>;
-
-export {PerformanceEntry} from './PerformanceEntry';
 
 export class PerformanceObserverEntryList {
   _entries: PerformanceEntryList;
@@ -100,17 +98,11 @@ const onPerformanceEntry = () => {
       const durationThreshold = observerConfig.entryTypes.get(entry.entryType);
       return entry.duration >= (durationThreshold ?? 0);
     });
-    if (entriesForObserver.length !== 0) {
-      try {
-        observerConfig.callback(
-          new PerformanceObserverEntryList(entriesForObserver),
-          observer,
-          droppedEntriesCount,
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    }
+    observerConfig.callback(
+      new PerformanceObserverEntryList(entriesForObserver),
+      observer,
+      droppedEntriesCount,
+    );
   }
 };
 

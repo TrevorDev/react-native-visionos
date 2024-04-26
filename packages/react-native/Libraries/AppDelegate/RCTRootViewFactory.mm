@@ -95,6 +95,7 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
 @end
 
 @implementation RCTRootViewFactory {
+  RCTHost *_reactHost;
   RCTRootViewFactoryConfiguration *_configuration;
   __weak id<RCTTurboModuleManagerDelegate> _turboModuleManagerDelegate;
 }
@@ -104,17 +105,12 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
 {
   if (self = [super init]) {
     _configuration = configuration;
-    _contextContainer = std::make_shared<const facebook::react::ContextContainer>();
-    _reactNativeConfig = std::make_shared<const facebook::react::EmptyReactNativeConfig>();
+    _contextContainer = std::make_shared<facebook::react::ContextContainer const>();
+    _reactNativeConfig = std::make_shared<facebook::react::EmptyReactNativeConfig const>();
     _contextContainer->insert("ReactNativeConfig", _reactNativeConfig);
     _turboModuleManagerDelegate = turboModuleManagerDelegate;
   }
   return self;
-}
-
-- (instancetype)initWithConfiguration:(RCTRootViewFactoryConfiguration *)configuration
-{
-  return [self initWithConfiguration:configuration andTurboModuleManagerDelegate:nil];
 }
 
 - (UIView *)viewWithModuleName:(NSString *)moduleName initialProperties:(NSDictionary *)initialProperties
@@ -143,7 +139,7 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
 
     [self createReactHostIfNeeded:launchOptions];
 
-    RCTFabricSurface *surface = [self.reactHost createSurfaceWithModuleName:moduleName initialProperties:initProps];
+    RCTFabricSurface *surface = [_reactHost createSurfaceWithModuleName:moduleName initialProperties:initProps];
 
     RCTSurfaceHostingProxyRootView *surfaceHostingProxyRootView = [[RCTSurfaceHostingProxyRootView alloc]
         initWithSurface:surface
@@ -235,29 +231,23 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
 
 - (void)createReactHostIfNeeded:(NSDictionary *)launchOptions
 {
-  if (self.reactHost) {
+  if (_reactHost) {
     return;
   }
-  self.reactHost = [self createReactHost:launchOptions];
-}
 
-- (RCTHost *)createReactHost:(NSDictionary *)launchOptions
-{
   __weak __typeof(self) weakSelf = self;
-  RCTHost *reactHost =
-      [[RCTHost alloc] initWithBundleURLProvider:self->_configuration.bundleURLBlock
-                                    hostDelegate:nil
-                      turboModuleManagerDelegate:_turboModuleManagerDelegate
-                                jsEngineProvider:^std::shared_ptr<facebook::react::JSRuntimeFactory>() {
-                                  return [weakSelf createJSRuntimeFactory];
-                                }
-                                   launchOptions:launchOptions];
-  [reactHost setBundleURLProvider:^NSURL *() {
+  _reactHost = [[RCTHost alloc] initWithBundleURLProvider:self->_configuration.bundleURLBlock
+                                             hostDelegate:nil
+                               turboModuleManagerDelegate:_turboModuleManagerDelegate
+                                         jsEngineProvider:^std::shared_ptr<facebook::react::JSRuntimeFactory>() {
+                                           return [weakSelf createJSRuntimeFactory];
+                                         }
+                                            launchOptions:launchOptions];
+  [_reactHost setBundleURLProvider:^NSURL *() {
     return [weakSelf bundleURL];
   }];
-  [reactHost setContextContainerHandler:self];
-  [reactHost start];
-  return reactHost;
+  [_reactHost setContextContainerHandler:self];
+  [_reactHost start];
 }
 
 - (std::shared_ptr<facebook::react::JSRuntimeFactory>)createJSRuntimeFactory
@@ -274,36 +264,9 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
   contextContainer->insert("ReactNativeConfig", _reactNativeConfig);
 }
 
-- (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge
-{
-  if (_configuration.extraModulesForBridge != nil) {
-    return _configuration.extraModulesForBridge(bridge);
-  }
-  return nil;
-}
-
-- (NSDictionary<NSString *, Class> *)extraLazyModuleClassesForBridge:(RCTBridge *)bridge
-{
-  if (_configuration.extraLazyModuleClassesForBridge != nil) {
-    return _configuration.extraLazyModuleClassesForBridge(bridge);
-  }
-  return nil;
-}
-
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-  if (_configuration.sourceURLForBridge != nil) {
-    return _configuration.sourceURLForBridge(bridge);
-  }
   return [self bundleURL];
-}
-
-- (BOOL)bridge:(RCTBridge *)bridge didNotFindModule:(NSString *)moduleName
-{
-  if (_configuration.bridgeDidNotFindModule != nil) {
-    return _configuration.bridgeDidNotFindModule(bridge, moduleName);
-  }
-  return NO;
 }
 
 - (NSURL *)bundleURL

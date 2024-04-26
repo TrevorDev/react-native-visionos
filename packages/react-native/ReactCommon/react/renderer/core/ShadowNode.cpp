@@ -42,9 +42,7 @@ Props::Shared ShadowNode::propsForClonedShadowNode(
   if (!hasBeenMounted && sourceNodeHasRawProps && props) {
     auto& castedProps = const_cast<Props&>(*props);
     castedProps.rawProps = mergeDynamicProps(
-        sourceShadowNode.getProps()->rawProps,
-        props->rawProps,
-        NullValueStrategy::Override);
+        sourceShadowNode.getProps()->rawProps, props->rawProps);
     return props;
   }
 #endif
@@ -77,7 +75,6 @@ ShadowNode::ShadowNode(
   react_native_assert(children_);
 
   traits_.set(ShadowNodeTraits::Trait::ChildrenAreShared);
-  traits_.set(fragment.traits.get());
 
   for (const auto& child : *children_) {
     child->family_->setParent(family_);
@@ -107,11 +104,7 @@ ShadowNode::ShadowNode(
   react_native_assert(props_);
   react_native_assert(children_);
 
-  // State could have been progressed above by checking
-  // `sourceShadowNode.getMostRecentState()`.
-  traits_.unset(ShadowNodeTraits::Trait::ClonedByNativeStateUpdate);
   traits_.set(ShadowNodeTraits::Trait::ChildrenAreShared);
-  traits_.set(fragment.traits.get());
 
   if (fragment.children) {
     for (const auto& child : *children_) {
@@ -133,10 +126,11 @@ ShadowNode::Unshared ShadowNode::clone(
           propsParserContext, props_, RawProps(*family.nativeProps_DEPRECATED));
       auto clonedNode = componentDescriptor.cloneShadowNode(
           *this,
-          {.props = props,
-           .children = fragment.children,
-           .state = fragment.state,
-           .traits = fragment.traits});
+          {
+              props,
+              fragment.children,
+              fragment.state,
+          });
       return clonedNode;
     } else {
       // TODO: We might need to merge fragment.priops with
@@ -240,7 +234,7 @@ void ShadowNode::appendChild(const ShadowNode::Shared& child) {
 void ShadowNode::replaceChild(
     const ShadowNode& oldChild,
     const ShadowNode::Shared& newChild,
-    size_t suggestedIndex) {
+    int32_t suggestedIndex) {
   ensureUnsealed();
 
   cloneChildrenIfShared();
@@ -249,8 +243,7 @@ void ShadowNode::replaceChild(
   auto& children = const_cast<ShadowNode::ListOfShared&>(*children_);
   auto size = children.size();
 
-  if (suggestedIndex != std::numeric_limits<size_t>::max() &&
-      suggestedIndex < size) {
+  if (suggestedIndex != -1 && static_cast<size_t>(suggestedIndex) < size) {
     // If provided `suggestedIndex` is accurate,
     // replacing in place using the index.
     if (children.at(suggestedIndex).get() == &oldChild) {
@@ -287,11 +280,7 @@ void ShadowNode::setMounted(bool mounted) const {
   family_->eventEmitter_->setEnabled(mounted);
 }
 
-bool ShadowNode::getHasBeenMounted() const {
-  return hasBeenMounted_;
-}
-
-bool ShadowNode::progressStateIfNecessary() {
+void ShadowNode::progressStateIfNecessary() {
   if (!hasBeenMounted_ && state_) {
     ensureUnsealed();
     auto mostRecentState = family_->getMostRecentStateIfObsolete(*state_);
@@ -301,10 +290,8 @@ bool ShadowNode::progressStateIfNecessary() {
       // Must call ComponentDescriptor::adopt to trigger any side effect
       // state may have. E.g. adjusting padding.
       componentDescriptor.adopt(*this);
-      return true;
     }
   }
-  return false;
 }
 
 const ShadowNodeFamily& ShadowNode::getFamily() const {
@@ -313,9 +300,8 @@ const ShadowNodeFamily& ShadowNode::getFamily() const {
 
 ShadowNode::Unshared ShadowNode::cloneTree(
     const ShadowNodeFamily& shadowNodeFamily,
-    const std::function<ShadowNode::Unshared(const ShadowNode& oldShadowNode)>&
-        callback,
-    ShadowNodeTraits traits) const {
+    const std::function<ShadowNode::Unshared(ShadowNode const& oldShadowNode)>&
+        callback) const {
   auto ancestors = shadowNodeFamily.getAncestors(*this);
 
   if (ancestors.empty()) {
@@ -342,9 +328,10 @@ ShadowNode::Unshared ShadowNode::cloneTree(
         ShadowNode::sameFamily(*children.at(childIndex), *childNode));
     children[childIndex] = childNode;
 
-    childNode = parentNode.clone(
-        {.children = std::make_shared<ShadowNode::ListOfShared>(children),
-         .traits = traits});
+    childNode = parentNode.clone({
+        ShadowNodeFragment::propsPlaceholder(),
+        std::make_shared<ShadowNode::ListOfShared>(children),
+    });
   }
 
   return std::const_pointer_cast<ShadowNode>(childNode);

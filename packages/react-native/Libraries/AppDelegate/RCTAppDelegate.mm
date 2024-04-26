@@ -6,16 +6,12 @@
  */
 
 #import "RCTAppDelegate.h"
-#import <React/RCTColorSpaceUtils.h>
+#import <React/RCTCxxBridgeDelegate.h>
 #import <React/RCTLog.h>
 #import <React/RCTRootView.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTUtils.h>
-#import <objc/runtime.h>
-#import <react/featureflags/ReactNativeFeatureFlags.h>
-#import <react/featureflags/ReactNativeFeatureFlagsDefaults.h>
-#import <react/renderer/graphics/ColorComponents.h>
-#import "RCTAppDelegate+Protected.h"
+#import <react/renderer/runtimescheduler/RuntimeScheduler.h>
 #import "RCTAppSetupUtils.h"
 #import <objc/runtime.h>
 
@@ -24,28 +20,34 @@
 #else
 #import <React/CoreModulesPlugins.h>
 #endif
+#import <React/RCTBundleURLProvider.h>
 #import <React/RCTComponentViewFactory.h>
 #import <React/RCTComponentViewProtocol.h>
+#import <React/RCTFabricSurface.h>
+#import <React/RCTSurfaceHostingProxyRootView.h>
+#import <React/RCTSurfacePresenter.h>
+#import <ReactCommon/RCTContextContainerHandling.h>
 #if USE_HERMES
 #import <ReactCommon/RCTHermesInstance.h>
 #else
 #import <ReactCommon/RCTJscInstance.h>
 #endif
-#import <react/nativemodule/dom/NativeDOM.h>
-#import <react/nativemodule/featureflags/NativeReactNativeFeatureFlags.h>
-#import <react/nativemodule/microtasks/NativeMicrotasks.h>
+#import <ReactCommon/RCTHost+Internal.h>
+#import <ReactCommon/RCTHost.h>
+#import <ReactCommon/RCTTurboModuleManager.h>
+#import <react/config/ReactNativeConfig.h>
+#import <react/renderer/runtimescheduler/RuntimeScheduler.h>
+#import <react/renderer/runtimescheduler/RuntimeSchedulerCallInvoker.h>
+#import <react/runtime/JSRuntimeFactory.h>
 
-@interface RCTAppDelegate () <RCTComponentViewFactoryComponentProvider>
+@interface RCTAppDelegate () <RCTComponentViewFactoryComponentProvider, RCTTurboModuleManagerDelegate>
 @end
 
 @implementation RCTAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  [self _setUpFeatureFlags];
-
   RCTSetNewArchEnabled([self newArchEnabled]);
-  [RCTColorSpaceUtils applyDefaultColorSpace:self.defaultColorSpace];
   RCTAppSetupPrepareApp(application, self.turboModuleEnabled);
 
   self.rootViewFactory = [self createRCTRootViewFactory];
@@ -131,11 +133,6 @@
   [[NSNotificationCenter defaultCenter] postNotificationName:RCTWindowFrameDidChangeNotification object:self];
 }
 
-- (RCTColorSpace)defaultColorSpace
-{
-  return RCTColorSpaceSRGB;
-}
-
 #pragma mark - New Arch Enabled settings
 
 - (BOOL)newArchEnabled
@@ -205,18 +202,6 @@
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
                                                       jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
 {
-  if (name == facebook::react::NativeReactNativeFeatureFlags::kModuleName) {
-    return std::make_shared<facebook::react::NativeReactNativeFeatureFlags>(jsInvoker);
-  }
-
-  if (name == facebook::react::NativeMicrotasks::kModuleName) {
-    return std::make_shared<facebook::react::NativeMicrotasks>(jsInvoker);
-  }
-
-  if (name == facebook::react::NativeDOM::kModuleName) {
-    return std::make_shared<facebook::react::NativeDOM>(jsInvoker);
-  }
-
   return nullptr;
 }
 
@@ -253,52 +238,17 @@
                                                    turboModuleEnabled:self.turboModuleEnabled
                                                     bridgelessEnabled:self.bridgelessEnabled];
 
-  configuration.createRootViewWithBridge = ^UIView *(RCTBridge *bridge, NSString *moduleName, NSDictionary *initProps) {
+  configuration.createRootViewWithBridge = ^UIView *(RCTBridge *bridge, NSString *moduleName, NSDictionary *initProps)
+  {
     return [weakSelf createRootViewWithBridge:bridge moduleName:moduleName initProps:initProps];
   };
 
-  configuration.createBridgeWithDelegate = ^RCTBridge *(id<RCTBridgeDelegate> delegate, NSDictionary *launchOptions) {
+  configuration.createBridgeWithDelegate = ^RCTBridge *(id<RCTBridgeDelegate> delegate, NSDictionary *launchOptions)
+  {
     return [weakSelf createBridgeWithDelegate:delegate launchOptions:launchOptions];
   };
 
-  configuration.sourceURLForBridge = ^NSURL *_Nullable(RCTBridge *_Nonnull bridge)
-  {
-    return [weakSelf sourceURLForBridge:bridge];
-  };
-
-  if ([self respondsToSelector:@selector(extraModulesForBridge:)]) {
-    configuration.extraModulesForBridge = ^NSArray<id<RCTBridgeModule>> *_Nonnull(RCTBridge *_Nonnull bridge)
-    {
-      return [weakSelf extraModulesForBridge:bridge];
-    };
-  }
-
-  if ([self respondsToSelector:@selector(extraLazyModuleClassesForBridge:)]) {
-    configuration.extraLazyModuleClassesForBridge =
-        ^NSDictionary<NSString *, Class> *_Nonnull(RCTBridge *_Nonnull bridge)
-    {
-      return [weakSelf extraLazyModuleClassesForBridge:bridge];
-    };
-  }
-
-  if ([self respondsToSelector:@selector(bridge:didNotFindModule:)]) {
-    configuration.bridgeDidNotFindModule = ^BOOL(RCTBridge *_Nonnull bridge, NSString *_Nonnull moduleName) {
-      return [weakSelf bridge:bridge didNotFindModule:moduleName];
-    };
-  }
-
   return [[RCTRootViewFactory alloc] initWithConfiguration:configuration andTurboModuleManagerDelegate:self];
-}
-
-#pragma mark - Feature Flags
-
-class RCTAppDelegateBridgelessFeatureFlags : public facebook::react::ReactNativeFeatureFlagsDefaults {};
-
-- (void)_setUpFeatureFlags
-{
-  if ([self bridgelessEnabled]) {
-    facebook::react::ReactNativeFeatureFlags::override(std::make_unique<RCTAppDelegateBridgelessFeatureFlags>());
-  }
 }
 
 @end

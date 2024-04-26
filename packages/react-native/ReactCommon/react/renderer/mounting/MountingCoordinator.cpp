@@ -68,12 +68,10 @@ bool MountingCoordinator::waitForTransaction(
 
 void MountingCoordinator::updateBaseRevision(
     const ShadowTreeRevision& baseRevision) const {
-  std::scoped_lock lock(mutex_);
   baseRevision_ = baseRevision;
 }
 
 void MountingCoordinator::resetLatestRevision() const {
-  std::scoped_lock lock(mutex_);
   lastRevision_.reset();
 }
 
@@ -108,8 +106,6 @@ std::optional<MountingTransaction> MountingCoordinator::pullTransaction()
       mountingOverrideDelegate->shouldOverridePullTransaction();
 
   if (shouldOverridePullTransaction) {
-    SystraceSection section2("MountingCoordinator::overridePullTransaction");
-
     auto mutations = ShadowViewMutation::List{};
     auto telemetry = TransactionTelemetry{};
 
@@ -132,9 +128,6 @@ std::optional<MountingTransaction> MountingCoordinator::pullTransaction()
 
 #ifdef RN_SHADOW_TREE_INTROSPECTION
   if (transaction.has_value()) {
-    SystraceSection section2(
-        "MountingCoordinator::verifyMutationsForDebugging");
-
     // We have something to validate.
     auto mutations = transaction->getMutations();
 
@@ -186,7 +179,6 @@ std::optional<MountingTransaction> MountingCoordinator::pullTransaction()
 }
 
 bool MountingCoordinator::hasPendingTransactions() const {
-  std::scoped_lock lock(mutex_);
   return lastRevision_.has_value();
 }
 
@@ -194,8 +186,7 @@ const TelemetryController& MountingCoordinator::getTelemetryController() const {
   return telemetryController_;
 }
 
-ShadowTreeRevision MountingCoordinator::getBaseRevision() const {
-  std::scoped_lock lock(mutex_);
+const ShadowTreeRevision& MountingCoordinator::getBaseRevision() const {
   return baseRevision_;
 }
 

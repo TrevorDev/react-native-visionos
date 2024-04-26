@@ -316,7 +316,7 @@ TEST_F(BridgingTest, asyncCallbackInvalidation) {
       [](jsi::Runtime& rt, jsi::Function& f) { f.call(rt, "hello"); });
 
   // LongLivedObjectCollection goes away before callback is executed
-  LongLivedObjectCollection::get(rt).clear();
+  LongLivedObjectCollection::get().clear();
 
   flushQueue();
 

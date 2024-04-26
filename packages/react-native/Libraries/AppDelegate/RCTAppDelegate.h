@@ -6,7 +6,6 @@
  */
 
 #import <React/RCTBridgeDelegate.h>
-#import <React/RCTConvert.h>
 #import <UIKit/UIKit.h>
 #import "RCTRootViewFactory.h"
 
@@ -132,11 +131,6 @@ NS_ASSUME_NONNULL_BEGIN
  * For example: UISplitViewController requires `setViewController(_:for:)`
  */
 - (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController;
-
-/**
- * The default `RCTColorSpace` for the app. It defaults to `RCTColorSpaceSRGB`.
- */
-@property (nonatomic, readonly) RCTColorSpace defaultColorSpace;
 
 /// This method returns a map of Component Descriptors and Components classes that needs to be registered in the
 /// new renderer. The Component Descriptor is a string which represent the name used in JS to refer to the native

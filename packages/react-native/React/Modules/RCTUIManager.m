@@ -1677,8 +1677,8 @@ static UIView *_jsResponder;
 {
   self = [super init];
   if (self) {
-    _uiManager = uiManager;
-    _registry = registry;
+    self->_uiManager = uiManager;
+    self->_registry = registry;
   }
   return self;
 }
@@ -1696,19 +1696,19 @@ static UIView *_jsResponder;
 - (id)objectForKey:(id)key
 {
   if (![key isKindOfClass:[NSNumber class]]) {
-    return [super objectForKey:key];
+    return [super objectForKeyedSubscript:key];
   }
 
   NSNumber *index = (NSNumber *)key;
-  UIView *view = _registry[index];
+  UIView *view = [_uiManager viewForReactTag:index];
   if (view) {
     return [RCTUIManager paperViewOrCurrentView:view];
   }
-  view = [_uiManager viewForReactTag:index];
+  view = _registry[index];
   if (view) {
     return [RCTUIManager paperViewOrCurrentView:view];
   }
-  return [super objectForKey:key];
+  return [super objectForKeyedSubscript:key];
 }
 
 - (void)removeObjectForKey:(id)key

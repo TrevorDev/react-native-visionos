@@ -23,7 +23,6 @@
 #import "RCTJSThread.h"
 #import "RCTLog.h"
 #import "RCTModuleData.h"
-#import "RCTPausedInDebuggerOverlayController.h"
 #import "RCTPerformanceLogger.h"
 #import "RCTProfile.h"
 #import "RCTReloadCommand.h"
@@ -190,12 +189,9 @@ void RCTUIManagerSetDispatchAccessibilityManagerInitOntoMain(BOOL enabled)
   kDispatchAccessibilityManagerInitOntoMain = enabled;
 }
 
-class RCTBridgeHostTargetDelegate : public facebook::react::jsinspector_modern::HostTargetDelegate {
+class RCTBridgePageTargetDelegate : public facebook::react::jsinspector_modern::PageTargetDelegate {
  public:
-  RCTBridgeHostTargetDelegate(RCTBridge *bridge)
-      : bridge_(bridge), pauseOverlayController_([[RCTPausedInDebuggerOverlayController alloc] init])
-  {
-  }
+  RCTBridgePageTargetDelegate(RCTBridge *bridge) : bridge_(bridge) {}
 
   void onReload(const PageReloadRequest &request) override
   {
@@ -203,32 +199,8 @@ class RCTBridgeHostTargetDelegate : public facebook::react::jsinspector_modern::
     [bridge_ reload];
   }
 
-  void onSetPausedInDebuggerMessage(const OverlaySetPausedInDebuggerMessageRequest &request) override
-  {
-    RCTAssertMainQueue();
-    if (!request.message.has_value()) {
-      [pauseOverlayController_ hide];
-    } else {
-      __weak RCTBridge *bridgeWeak = bridge_;
-      [pauseOverlayController_ showWithMessage:@(request.message.value().c_str())
-                                      onResume:^{
-                                        RCTAssertMainQueue();
-                                        RCTBridge *bridgeStrong = bridgeWeak;
-                                        if (!bridgeStrong) {
-                                          return;
-                                        }
-                                        if (!bridgeStrong.inspectorTarget) {
-                                          return;
-                                        }
-                                        bridgeStrong.inspectorTarget->sendCommand(
-                                            facebook::react::jsinspector_modern::HostCommand::DebuggerResume);
-                                      }];
-    }
-  }
-
  private:
   __weak RCTBridge *bridge_;
-  RCTPausedInDebuggerOverlayController *pauseOverlayController_;
 };
 
 @interface RCTBridge () <RCTReloadListener>
@@ -237,8 +209,8 @@ class RCTBridgeHostTargetDelegate : public facebook::react::jsinspector_modern::
 @implementation RCTBridge {
   NSURL *_delegateBundleURL;
 
-  std::unique_ptr<RCTBridgeHostTargetDelegate> _inspectorHostDelegate;
-  std::shared_ptr<facebook::react::jsinspector_modern::HostTarget> _inspectorTarget;
+  std::unique_ptr<RCTBridgePageTargetDelegate> _inspectorPageDelegate;
+  std::shared_ptr<facebook::react::jsinspector_modern::PageTarget> _inspectorTarget;
   std::optional<int> _inspectorPageId;
 }
 
@@ -288,7 +260,7 @@ static RCTBridge *RCTCurrentBridgeInstance = nil;
     _bundleURL = bundleURL;
     _moduleProvider = block;
     _launchOptions = [launchOptions copy];
-    _inspectorHostDelegate = std::make_unique<RCTBridgeHostTargetDelegate>(self);
+    _inspectorPageDelegate = std::make_unique<RCTBridgePageTargetDelegate>(self);
 
     [self setUp];
   }
@@ -442,7 +414,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
   auto &inspectorFlags = facebook::react::jsinspector_modern::InspectorFlags::getInstance();
   if (inspectorFlags.getEnableModernCDPRegistry() && !_inspectorPageId.has_value()) {
     _inspectorTarget =
-        facebook::react::jsinspector_modern::HostTarget::create(*_inspectorHostDelegate, [](auto callback) {
+        facebook::react::jsinspector_modern::PageTarget::create(*_inspectorPageDelegate, [](auto callback) {
           RCTExecuteOnMainQueue(^{
             callback();
           });
@@ -464,7 +436,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
                   .integrationName = "iOS Bridge (RCTBridge)",
               });
         },
-        {.nativePageReloads = true, .prefersFuseboxFrontend = true});
+        {.nativePageReloads = true});
   }
 
   Class bridgeClass = self.bridgeClass;
@@ -555,7 +527,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
   [self.batchedBridge registerSegmentWithId:segmentId path:path];
 }
 
-- (facebook::react::jsinspector_modern::HostTarget *)inspectorTarget
+- (facebook::react::jsinspector_modern::PageTarget *)inspectorTarget
 {
   return _inspectorTarget.get();
 }

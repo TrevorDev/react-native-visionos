@@ -66,7 +66,6 @@ import com.facebook.react.fabric.mounting.mountitems.DispatchCommandMountItem;
 import com.facebook.react.fabric.mounting.mountitems.MountItem;
 import com.facebook.react.fabric.mounting.mountitems.MountItemFactory;
 import com.facebook.react.interfaces.fabric.SurfaceHandler;
-import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags;
 import com.facebook.react.internal.interop.InteropEventEmitter;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.modules.i18nmanager.I18nUtil;
@@ -93,6 +92,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * We instruct ProGuard not to strip out any fields or methods, because many of these methods are
@@ -133,8 +133,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
                 + " - Total commit time: %d ms. Avg: %.2f. Median: %.2f ms. Max: %d ms.\n"
                 + " - Layout time: %d ms. Avg: %.2f. Median: %.2f ms. Max: %d ms.\n"
                 + " - Diffing time: %d ms. Avg: %.2f. Median: %.2f ms. Max: %d ms.\n"
-                + " - FinishTransaction (Diffing + JNI serialization): %d ms. Avg: %.2f. Median:"
-                + " %.2f ms. Max: %d ms.\n"
+                + " - FinishTransaction (Diffing + JNI serialization): %d ms. Avg: %.2f. Median: %.2f ms. Max: %d ms.\n"
                 + " - Mounting: %d ms. Avg: %.2f. Median: %.2f ms. Max: %d ms.\n",
             commitPoint.getCommitNumber(),
             commitDuration,
@@ -175,8 +174,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
   @NonNull
   private final CopyOnWriteArrayList<UIManagerListener> mListeners = new CopyOnWriteArrayList<>();
 
-  private boolean mMountNotificationScheduled = false;
-  private final List<Integer> mMountedSurfaceIds = new ArrayList<>();
+  @NonNull private final AtomicBoolean mMountNotificationScheduled = new AtomicBoolean(false);
 
   @ThreadConfined(UI)
   @NonNull
@@ -208,14 +206,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
         public void executeItems(Queue<MountItem> items) {
           // This executor can be technically accessed before the dispatcher is created,
           // but if that happens, something is terribly wrong
-          if (ReactNativeFeatureFlags.forceBatchingMountItemsOnAndroid()) {
-            for (MountItem mountItem : items) {
-              mMountItemDispatcher.addMountItem(mountItem);
-            }
-            mMountItemDispatcher.tryDispatchMountItems();
-          } else {
-            mMountItemDispatcher.dispatchMountItems(items);
-          }
+          mMountItemDispatcher.dispatchMountItems(items);
         }
       };
 
@@ -513,8 +504,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
             mReactApplicationContext,
             attributedString,
             paragraphAttributes,
-            PixelUtil.toPixelFromDIP(width),
-            PixelUtil.toPixelFromDIP(height));
+            PixelUtil.toPixelFromDIP(width));
   }
 
   @SuppressWarnings("unused")
@@ -1028,8 +1018,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
   public void dispatchCommand(
       final int reactTag, final int commandId, @Nullable final ReadableArray commandArgs) {
     throw new UnsupportedOperationException(
-        "dispatchCommand called without surfaceId - Fabric dispatchCommand must be called through"
-            + " Fabric JSI API");
+        "dispatchCommand called without surfaceId - Fabric dispatchCommand must be called through Fabric JSI API");
   }
 
   @Override
@@ -1039,8 +1028,7 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
   public void dispatchCommand(
       final int reactTag, final String commandId, @Nullable final ReadableArray commandArgs) {
     throw new UnsupportedOperationException(
-        "dispatchCommand called without surfaceId - Fabric dispatchCommand must be called through"
-            + " Fabric JSI API");
+        "dispatchCommand called without surfaceId - Fabric dispatchCommand must be called through Fabric JSI API");
   }
 
   @Deprecated
@@ -1216,8 +1204,6 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
   }
 
   private class MountItemDispatchListener implements MountItemDispatcher.ItemDispatchListener {
-    @UiThread
-    @ThreadConfined(UI)
     @Override
     public void willMountItems(@Nullable List<MountItem> mountItems) {
       for (UIManagerListener listener : mListeners) {
@@ -1225,26 +1211,18 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
       }
     }
 
-    @UiThread
-    @ThreadConfined(UI)
     @Override
     public void didMountItems(@Nullable List<MountItem> mountItems) {
       for (UIManagerListener listener : mListeners) {
         listener.didMountItems(FabricUIManager.this);
       }
 
-      if (mountItems == null || mountItems.isEmpty()) {
+      if (!ReactFeatureFlags.enableMountHooks) {
         return;
       }
 
-      // Collect surface IDs for all the mount items
-      for (MountItem mountItem : mountItems) {
-        if (mountItem != null && !mMountedSurfaceIds.contains(mountItem.getSurfaceId())) {
-          mMountedSurfaceIds.add(mountItem.getSurfaceId());
-        }
-      }
-
-      if (!mMountNotificationScheduled && !mMountedSurfaceIds.isEmpty()) {
+      boolean mountNotificationScheduled = mMountNotificationScheduled.getAndSet(true);
+      if (!mountNotificationScheduled) {
         // Notify mount when the effects are visible and prevent mount hooks to
         // delay paint.
         UiThreadUtil.getUiThreadHandler()
@@ -1252,19 +1230,24 @@ public class FabricUIManager implements UIManager, LifecycleEventListener, UIBlo
                 new Runnable() {
                   @Override
                   public void run() {
-                    mMountNotificationScheduled = false;
+                    mMountNotificationScheduled.set(false);
 
                     final @Nullable Binding binding = mBinding;
-                    if (binding == null || mDestroyed) {
-                      mMountedSurfaceIds.clear();
+                    if (mountItems == null || binding == null) {
                       return;
                     }
 
-                    for (int surfaceId : mMountedSurfaceIds) {
-                      binding.reportMount(surfaceId);
+                    // Collect surface IDs for all the mount items
+                    List<Integer> surfaceIds = new ArrayList<>();
+                    for (MountItem mountItem : mountItems) {
+                      if (mountItem != null && !surfaceIds.contains(mountItem.getSurfaceId())) {
+                        surfaceIds.add(mountItem.getSurfaceId());
+                      }
                     }
 
-                    mMountedSurfaceIds.clear();
+                    for (int surfaceId : surfaceIds) {
+                      binding.reportMount(surfaceId);
+                    }
                   }
                 });
       }

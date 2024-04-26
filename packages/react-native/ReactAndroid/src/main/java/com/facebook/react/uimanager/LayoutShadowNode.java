@@ -230,67 +230,28 @@ public class LayoutShadowNode extends ReactShadowNodeImpl {
     super.setFlexGrow(flexGrow);
   }
 
-  @ReactProp(name = ViewProps.ROW_GAP)
-  public void setRowGap(Dynamic rowGap) {
+  @ReactProp(name = ViewProps.ROW_GAP, defaultFloat = YogaConstants.UNDEFINED)
+  public void setRowGap(float rowGap) {
     if (isVirtual()) {
       return;
     }
-
-    mTempYogaValue.setFromDynamic(rowGap);
-    switch (mTempYogaValue.unit) {
-      case AUTO:
-      case POINT:
-      case UNDEFINED:
-        setRowGap(mTempYogaValue.value);
-        break;
-      case PERCENT:
-        setRowGapPercent(mTempYogaValue.value);
-        break;
-    }
-
-    rowGap.recycle();
+    super.setRowGap(PixelUtil.toPixelFromDIP(rowGap));
   }
 
-  @ReactProp(name = ViewProps.COLUMN_GAP)
-  public void setColumnGap(Dynamic columnGap) {
+  @ReactProp(name = ViewProps.COLUMN_GAP, defaultFloat = YogaConstants.UNDEFINED)
+  public void setColumnGap(float columnGap) {
     if (isVirtual()) {
       return;
     }
-
-    mTempYogaValue.setFromDynamic(columnGap);
-    switch (mTempYogaValue.unit) {
-      case AUTO:
-      case POINT:
-      case UNDEFINED:
-        setColumnGap(mTempYogaValue.value);
-        break;
-      case PERCENT:
-        setColumnGapPercent(mTempYogaValue.value);
-        break;
-    }
-
-    columnGap.recycle();
+    super.setColumnGap(PixelUtil.toPixelFromDIP(columnGap));
   }
 
-  @ReactProp(name = ViewProps.GAP)
-  public void setGap(Dynamic gap) {
+  @ReactProp(name = ViewProps.GAP, defaultFloat = YogaConstants.UNDEFINED)
+  public void setGap(float gap) {
     if (isVirtual()) {
       return;
     }
-
-    mTempYogaValue.setFromDynamic(gap);
-    switch (mTempYogaValue.unit) {
-      case AUTO:
-      case POINT:
-      case UNDEFINED:
-        setGap(mTempYogaValue.value);
-        break;
-      case PERCENT:
-        setGapPercent(mTempYogaValue.value);
-        break;
-    }
-
-    gap.recycle();
+    super.setGap(PixelUtil.toPixelFromDIP(gap));
   }
 
   @ReactProp(name = ViewProps.FLEX_SHRINK, defaultFloat = 0f)

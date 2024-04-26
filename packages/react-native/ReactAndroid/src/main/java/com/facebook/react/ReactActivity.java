@@ -65,12 +65,8 @@ public abstract class ReactActivity extends AppCompatActivity
     mDelegate.onDestroy();
   }
 
-  public @Nullable ReactDelegate getReactDelegate() {
-    return mDelegate.getReactDelegate();
-  }
-
-  public ReactActivityDelegate getReactActivityDelegate() {
-    return mDelegate;
+  public void getReactDelegate() {
+    mDelegate.getReactDelegate();
   }
 
   @Override

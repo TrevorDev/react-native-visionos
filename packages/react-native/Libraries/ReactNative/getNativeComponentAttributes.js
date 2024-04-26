@@ -19,14 +19,17 @@ const matricesDiffer = require('../Utilities/differ/matricesDiffer');
 const pointsDiffer = require('../Utilities/differ/pointsDiffer');
 const sizesDiffer = require('../Utilities/differ/sizesDiffer');
 const UIManager = require('./UIManager');
+const invariant = require('invariant');
 const nullthrows = require('nullthrows');
 
 function getNativeComponentAttributes(uiViewClassName: string): any {
   const viewConfig = UIManager.getViewManagerConfig(uiViewClassName);
 
-  if (viewConfig == null) {
-    return null;
-  }
+  invariant(
+    viewConfig != null && viewConfig.NativeProps != null,
+    'requireNativeComponent: "%s" was not found in the UIManager.',
+    uiViewClassName,
+  );
 
   // TODO: This seems like a whole lot of runtime initialization for every
   // native component that can be either avoided or simplified.
@@ -74,8 +77,8 @@ function getNativeComponentAttributes(uiViewClassName: string): any {
           ? true
           : {process}
         : process == null
-          ? {diff}
-          : {diff, process};
+        ? {diff}
+        : {diff, process};
   }
 
   // Unfortunately, the current setup declares style properties as top-level

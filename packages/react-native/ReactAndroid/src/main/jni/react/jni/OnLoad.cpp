@@ -19,7 +19,6 @@
 #include "JReactMarker.h"
 #include "JavaScriptExecutorHolder.h"
 #include "ProxyExecutor.h"
-#include "ReactInstanceManagerInspectorTarget.h"
 #include "WritableNativeArray.h"
 #include "WritableNativeMap.h"
 
@@ -91,7 +90,6 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     WritableNativeMap::registerNatives();
     JReactMarker::registerNatives();
     JInspector::registerNatives();
-    ReactInstanceManagerInspectorTarget::registerNatives();
   });
 }
 

@@ -13,6 +13,7 @@
 #include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/debug/SystraceSection.h>
 #include <utility>
+#include "ErrorUtils.h"
 
 namespace facebook::react {
 
@@ -57,6 +58,10 @@ bool RuntimeScheduler::getShouldYield() const noexcept {
   return runtimeSchedulerImpl_->getShouldYield();
 }
 
+bool RuntimeScheduler::getIsSynchronous() const noexcept {
+  return runtimeSchedulerImpl_->getIsSynchronous();
+}
+
 void RuntimeScheduler::cancelTask(Task& task) noexcept {
   return runtimeSchedulerImpl_->cancelTask(task);
 }
@@ -81,13 +86,6 @@ void RuntimeScheduler::scheduleRenderingUpdate(
     RuntimeSchedulerRenderingUpdate&& renderingUpdate) {
   return runtimeSchedulerImpl_->scheduleRenderingUpdate(
       std::move(renderingUpdate));
-}
-
-void RuntimeScheduler::setShadowTreeRevisionConsistencyManager(
-    ShadowTreeRevisionConsistencyManager*
-        shadowTreeRevisionConsistencyManager) {
-  return runtimeSchedulerImpl_->setShadowTreeRevisionConsistencyManager(
-      shadowTreeRevisionConsistencyManager);
 }
 
 } // namespace facebook::react

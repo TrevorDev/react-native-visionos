@@ -386,6 +386,15 @@ void Binding::installFabricUIManager(
     }
   }
 
+  // TODO: T31905686 Create synchronous Event Beat
+  EventBeat::Factory synchronousBeatFactory =
+      [eventBeatManager, runtimeExecutor, globalJavaUiManager](
+          const EventBeat::SharedOwnerBox& ownerBox)
+      -> std::unique_ptr<EventBeat> {
+    return std::make_unique<AsyncEventBeat>(
+        ownerBox, eventBeatManager, runtimeExecutor, globalJavaUiManager);
+  };
+
   EventBeat::Factory asynchronousBeatFactory =
       [eventBeatManager, runtimeExecutor, globalJavaUiManager](
           const EventBeat::SharedOwnerBox& ownerBox)
@@ -406,6 +415,8 @@ void Binding::installFabricUIManager(
 
   CoreFeatures::enablePropIteratorSetter =
       getFeatureFlagValue("enableCppPropsIteratorSetter");
+  CoreFeatures::enableClonelessStateProgression =
+      getFeatureFlagValue("enableClonelessStateProgression");
   CoreFeatures::excludeYogaFromRawProps =
       getFeatureFlagValue("excludeYogaFromRawProps");
 
@@ -422,6 +433,7 @@ void Binding::installFabricUIManager(
   toolbox.bridgelessBindingsExecutor = std::nullopt;
   toolbox.runtimeExecutor = runtimeExecutor;
 
+  toolbox.synchronousEventBeatFactory = synchronousBeatFactory;
   toolbox.asynchronousEventBeatFactory = asynchronousBeatFactory;
 
   if (ReactNativeFeatureFlags::enableBackgroundExecutor()) {
@@ -462,7 +474,8 @@ std::shared_ptr<FabricMountingManager> Binding::getMountingManager(
 
 void Binding::schedulerDidFinishTransaction(
     const MountingCoordinator::Shared& mountingCoordinator) {
-  if (!ReactNativeFeatureFlags::androidEnablePendingFabricTransactions()) {
+  auto mountingManager = getMountingManager("schedulerDidFinishTransaction");
+  if (!mountingManager) {
     return;
   }
 
@@ -470,43 +483,7 @@ void Binding::schedulerDidFinishTransaction(
   if (!mountingTransaction.has_value()) {
     return;
   }
-
-  std::unique_lock<std::mutex> lock(pendingTransactionsMutex_);
-  auto pendingTransaction = std::find_if(
-      pendingTransactions_.begin(),
-      pendingTransactions_.end(),
-      [&](const auto& transaction) {
-        return transaction.getSurfaceId() ==
-            mountingTransaction->getSurfaceId();
-      });
-
-  if (pendingTransaction != pendingTransactions_.end()) {
-    pendingTransaction->mergeWith(std::move(*mountingTransaction));
-  } else {
-    pendingTransactions_.push_back(std::move(*mountingTransaction));
-  }
-}
-
-void Binding::schedulerShouldRenderTransactions(
-    const MountingCoordinator::Shared& mountingCoordinator) {
-  auto mountingManager =
-      getMountingManager("schedulerShouldRenderTransactions");
-  if (!mountingManager) {
-    return;
-  }
-
-  if (ReactNativeFeatureFlags::androidEnablePendingFabricTransactions()) {
-    std::unique_lock<std::mutex> lock(pendingTransactionsMutex_);
-    for (auto& transaction : pendingTransactions_) {
-      mountingManager->executeMount(transaction);
-    }
-    pendingTransactions_.clear();
-  } else {
-    auto mountingTransaction = mountingCoordinator->pullTransaction();
-    if (mountingTransaction.has_value()) {
-      mountingManager->executeMount(*mountingTransaction);
-    }
-  }
+  mountingManager->executeMount(*mountingTransaction);
 }
 
 void Binding::schedulerDidRequestPreliminaryViewAllocation(

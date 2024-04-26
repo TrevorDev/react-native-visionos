@@ -11,13 +11,13 @@
 const Performance = require('../Performance').default;
 
 jest.mock(
-  '../specs/NativePerformance',
-  () => require('../specs/__mocks__/NativePerformance').default,
+  '../NativePerformance',
+  () => require('../__mocks__/NativePerformance').default,
 );
 
 jest.mock(
-  '../specs/NativePerformanceObserver',
-  () => require('../specs/__mocks__/NativePerformanceObserver').default,
+  '../NativePerformanceObserver',
+  () => require('../__mocks__/NativePerformanceObserver').default,
 );
 
 describe('Performance', () => {

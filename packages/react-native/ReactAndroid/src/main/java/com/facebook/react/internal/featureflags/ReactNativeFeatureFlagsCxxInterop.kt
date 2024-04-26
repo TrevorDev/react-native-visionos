@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<c3f02dff409c10aa7922141cef3a6990>>
+ * @generated SignedSource<<dfbe9bcab657e4c66dd104788639448d>>
  */
 
 /**
@@ -30,39 +30,23 @@ public object ReactNativeFeatureFlagsCxxInterop {
 
   @DoNotStrip @JvmStatic public external fun commonTestFlag(): Boolean
 
-  @DoNotStrip @JvmStatic public external fun androidEnablePendingFabricTransactions(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun batchRenderingUpdatesInEventLoop(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun destroyFabricSurfacesInReactInstanceManager(): Boolean
-
   @DoNotStrip @JvmStatic public external fun enableBackgroundExecutor(): Boolean
 
-  @DoNotStrip @JvmStatic public external fun enableCleanTextInputYogaNode(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun enableCustomDrawOrderFabric(): Boolean
+  @DoNotStrip @JvmStatic public external fun useModernRuntimeScheduler(): Boolean
 
   @DoNotStrip @JvmStatic public external fun enableMicrotasks(): Boolean
 
+  @DoNotStrip @JvmStatic public external fun batchRenderingUpdatesInEventLoop(): Boolean
+
   @DoNotStrip @JvmStatic public external fun enableSpannableBuildingUnification(): Boolean
 
-  @DoNotStrip @JvmStatic public external fun enableSynchronousStateUpdates(): Boolean
+  @DoNotStrip @JvmStatic public external fun enableCustomDrawOrderFabric(): Boolean
 
-  @DoNotStrip @JvmStatic public external fun enableUIConsistency(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun forceBatchingMountItemsOnAndroid(): Boolean
+  @DoNotStrip @JvmStatic public external fun enableFixForClippedSubviewsCrash(): Boolean
 
   @DoNotStrip @JvmStatic public external fun inspectorEnableCxxInspectorPackagerConnection(): Boolean
 
   @DoNotStrip @JvmStatic public external fun inspectorEnableModernCDPRegistry(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun preventDoubleTextMeasure(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun useModernRuntimeScheduler(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun useNativeViewConfigsInBridgelessMode(): Boolean
-
-  @DoNotStrip @JvmStatic public external fun useStateAlignmentMechanism(): Boolean
 
   @DoNotStrip @JvmStatic public external fun override(provider: Any)
 

@@ -110,6 +110,5 @@ protected constructor(
           jsMainModuleName,
           bundleAssetName ?: "index",
           isHermesEnabled ?: true,
-          useDeveloperSupport,
       )
 }

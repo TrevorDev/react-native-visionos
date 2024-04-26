@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <UIKit/UIKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
 

@@ -115,10 +115,6 @@ public class ReadableMapBuffer : MapBuffer {
     return buffer.getInt(bufferPosition)
   }
 
-  private fun readLongValue(bufferPosition: Int): Long {
-    return buffer.getLong(bufferPosition)
-  }
-
   private fun readBooleanValue(bufferPosition: Int): Boolean {
     return readIntValue(bufferPosition) == 1
   }
@@ -184,9 +180,6 @@ public class ReadableMapBuffer : MapBuffer {
   override fun getInt(key: Int): Int =
       readIntValue(getTypedValueOffsetForKey(key, MapBuffer.DataType.INT))
 
-  override fun getLong(key: Int): Long =
-      readLongValue(getTypedValueOffsetForKey(key, MapBuffer.DataType.LONG))
-
   override fun getDouble(key: Int): Double =
       readDoubleValue(getTypedValueOffsetForKey(key, MapBuffer.DataType.DOUBLE))
 
@@ -230,7 +223,6 @@ public class ReadableMapBuffer : MapBuffer {
       when (entry.type) {
         MapBuffer.DataType.BOOL -> builder.append(entry.booleanValue)
         MapBuffer.DataType.INT -> builder.append(entry.intValue)
-        MapBuffer.DataType.LONG -> builder.append(entry.longValue)
         MapBuffer.DataType.DOUBLE -> builder.append(entry.doubleValue)
         MapBuffer.DataType.STRING -> builder.append(entry.stringValue)
         MapBuffer.DataType.MAP -> builder.append(entry.mapBufferValue.toString())
@@ -286,12 +278,6 @@ public class ReadableMapBuffer : MapBuffer {
       get() {
         assertType(MapBuffer.DataType.INT)
         return readIntValue(bucketOffset + VALUE_OFFSET)
-      }
-
-    override val longValue: Long
-      get() {
-        assertType(MapBuffer.DataType.LONG)
-        return readLongValue(bucketOffset + VALUE_OFFSET)
       }
 
     override val booleanValue: Boolean

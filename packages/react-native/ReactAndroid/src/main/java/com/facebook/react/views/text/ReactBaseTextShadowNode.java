@@ -382,7 +382,7 @@ public abstract class ReactBaseTextShadowNode extends LayoutShadowNode
     // or images.
     for (int priorityIndex = 0; priorityIndex < ops.size(); priorityIndex++) {
       final SetSpanOperation op = ops.get(ops.size() - priorityIndex - 1);
-      final ReactSpan what = op.what;
+      final ReactSpan what = op.getWhat();
 
       boolean isInlineImage = what instanceof TextInlineImageSpan;
       if (isInlineImage || what instanceof TextInlineViewPlaceholderSpan) {
@@ -459,7 +459,6 @@ public abstract class ReactBaseTextShadowNode extends LayoutShadowNode
   protected int mFontStyle = ReactConstants.UNSET;
 
   protected int mFontWeight = ReactConstants.UNSET;
-
   /**
    * NB: If a font family is used that does not have a style in a certain Android version (ie.
    * monospace bold pre Android 5.0), that style (ie. bold) will not be inherited by nested Text
@@ -483,9 +482,7 @@ public abstract class ReactBaseTextShadowNode extends LayoutShadowNode
    */
   protected @Nullable String mFontFamily = null;
 
-  /**
-   * @see android.graphics.Paint#setFontFeatureSettings
-   */
+  /** @see android.graphics.Paint#setFontFeatureSettings */
   protected @Nullable String mFontFeatureSettings = null;
 
   protected boolean mContainsImages = false;

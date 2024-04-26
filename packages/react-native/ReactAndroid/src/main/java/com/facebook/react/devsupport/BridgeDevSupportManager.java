@@ -29,7 +29,6 @@ import com.facebook.react.devsupport.interfaces.DevBundleDownloadListener;
 import com.facebook.react.devsupport.interfaces.DevLoadingViewManager;
 import com.facebook.react.devsupport.interfaces.DevOptionHandler;
 import com.facebook.react.devsupport.interfaces.DevSplitBundleCallback;
-import com.facebook.react.devsupport.interfaces.PausedInDebuggerOverlayManager;
 import com.facebook.react.devsupport.interfaces.RedBoxHandler;
 import com.facebook.react.packagerconnection.RequestHandler;
 import java.io.File;
@@ -75,8 +74,7 @@ public final class BridgeDevSupportManager extends DevSupportManagerBase {
       int minNumShakes,
       @Nullable Map<String, RequestHandler> customPackagerCommandHandlers,
       @Nullable SurfaceDelegateFactory surfaceDelegateFactory,
-      @Nullable DevLoadingViewManager devLoadingViewManager,
-      @Nullable PausedInDebuggerOverlayManager pausedInDebuggerOverlayManager) {
+      @Nullable DevLoadingViewManager devLoadingViewManager) {
     super(
         applicationContext,
         reactInstanceManagerHelper,
@@ -87,8 +85,7 @@ public final class BridgeDevSupportManager extends DevSupportManagerBase {
         minNumShakes,
         customPackagerCommandHandlers,
         surfaceDelegateFactory,
-        devLoadingViewManager,
-        pausedInDebuggerOverlayManager);
+        devLoadingViewManager);
 
     if (getDevSettings().isStartSamplingProfilerOnInit()) {
       // Only start the profiler. If its already running, there is an error
